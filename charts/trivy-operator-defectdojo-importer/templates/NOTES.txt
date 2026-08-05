@@ -1,0 +1,21 @@
+{{ include "trivy-operator-defectdojo-importer.fullname" . }} has been installed.
+
+It is watching {{ join "," .Values.reports }} report(s) across all namespaces and
+forwarding them to {{ .Values.defectDojo.url }}.
+
+{{- if .Values.defectDojo.productTypeMap }}
+Product type is resolved per-namespace from defectDojo.productTypeMap, falling
+back to "{{ .Values.defectDojo.productTypeName }}" for unmatched namespaces.
+{{- else }}
+Product type is always "{{ .Values.defectDojo.productTypeName }}" (defectDojo.productTypeMap is empty).
+{{- end }}
+
+Product name is read from the first of these labels found - checked on the
+report's controller (e.g. its ReplicaSet) before its Pod: {{ join ", " .Values.defectDojo.productNameLabels }}
+Falls back to "{{ .Values.defectDojo.productName }}" when none of them can be resolved.
+
+{{- if .Values.metrics.service.enabled }}
+
+Metrics are available at:
+  {{ include "trivy-operator-defectdojo-importer.fullname" . }}-metrics.{{ .Release.Namespace }}.svc:{{ .Values.metrics.service.port }}/metrics
+{{- end }}

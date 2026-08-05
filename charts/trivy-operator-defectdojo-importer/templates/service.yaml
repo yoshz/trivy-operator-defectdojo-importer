@@ -1,0 +1,16 @@
+{{- if .Values.metrics.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "trivy-operator-defectdojo-importer.fullname" . }}-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "trivy-operator-defectdojo-importer.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "trivy-operator-defectdojo-importer.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.metrics.service.port }}
+      targetPort: metrics
+{{- end }}

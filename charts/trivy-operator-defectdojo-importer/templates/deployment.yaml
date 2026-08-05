@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "trivy-operator-defectdojo-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "trivy-operator-defectdojo-importer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # A single, non-persistent replica is expected: state is rebuilt from the
+  # cluster's report CRDs on every start (see README "Known differences").
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "trivy-operator-defectdojo-importer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "trivy-operator-defectdojo-importer.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "trivy-operator-defectdojo-importer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: importer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metrics.port }}
+          env:
+            - name: DEFECT_DOJO_URL
+              value: {{ required "defectDojo.url is required" .Values.defectDojo.url | quote }}
+            - name: DEFECT_DOJO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "trivy-operator-defectdojo-importer.secretName" . }}
+                  key: {{ include "trivy-operator-defectdojo-importer.secretKey" . }}
+            - name: DEFECT_DOJO_ACTIVE
+              value: {{ .Values.defectDojo.active | quote }}
+            - name: DEFECT_DOJO_VERIFIED
+              value: {{ .Values.defectDojo.verified | quote }}
+            - name: DEFECT_DOJO_CLOSE_OLD_FINDINGS
+              value: {{ .Values.defectDojo.closeOldFindings | quote }}
+            - name: DEFECT_DOJO_CLOSE_OLD_FINDINGS_PRODUCT_SCOPE
+              value: {{ .Values.defectDojo.closeOldFindingsProductScope | quote }}
+            - name: DEFECT_DOJO_PUSH_TO_JIRA
+              value: {{ .Values.defectDojo.pushToJira | quote }}
+            - name: DEFECT_DOJO_MINIMUM_SEVERITY
+              value: {{ .Values.defectDojo.minimumSeverity | quote }}
+            - name: DEFECT_DOJO_AUTO_CREATE_CONTEXT
+              value: {{ .Values.defectDojo.autoCreateContext | quote }}
+            - name: DEFECT_DOJO_DEDUPLICATION_ON_ENGAGEMENT
+              value: {{ .Values.defectDojo.deduplicationOnEngagement | quote }}
+            - name: DEFECT_DOJO_DO_NOT_REACTIVATE
+              value: {{ .Values.defectDojo.doNotReactivate | quote }}
+            - name: DEFECT_DOJO_ENGAGEMENT_NAME
+              value: {{ .Values.defectDojo.engagementName | quote }}
+            - name: DEFECT_DOJO_SERVICE_NAME
+              value: {{ .Values.defectDojo.serviceName | quote }}
+            - name: DEFECT_DOJO_ENV_NAME
+              value: {{ .Values.defectDojo.envName | quote }}
+            - name: DEFECT_DOJO_TEST_TITLE
+              value: {{ .Values.defectDojo.testTitle | quote }}
+            - name: DEFECT_DOJO_TAGS
+              value: {{ .Values.defectDojo.tags | quote }}
+            {{- if .Values.defectDojo.envNameMap }}
+            - name: DEFECT_DOJO_ENV_NAME_MAP
+              value: {{ include "trivy-operator-defectdojo-importer.joinPatternValueMap" .Values.defectDojo.envNameMap | quote }}
+            {{- end }}
+            - name: DEFECT_DOJO_PRODUCT_NAME
+              value: {{ .Values.defectDojo.productName | quote }}
+            - name: DEFECT_DOJO_PRODUCT_TYPE_NAME
+              value: {{ .Values.defectDojo.productTypeName | quote }}
+            {{- if .Values.defectDojo.productTypeMap }}
+            - name: DEFECT_DOJO_PRODUCT_TYPE_MAP
+              value: {{ include "trivy-operator-defectdojo-importer.joinPatternValueMap" .Values.defectDojo.productTypeMap | quote }}
+            {{- end }}
+            - name: DEFECT_DOJO_PRODUCT_NAME_LABELS
+              value: {{ join "," .Values.defectDojo.productNameLabels | quote }}
+            - name: REPORTS
+              value: {{ join "," .Values.reports | quote }}
+            - name: REPORT_API_GROUP
+              value: {{ .Values.reportApiGroup | quote }}
+            - name: REPORT_API_VERSION
+              value: {{ .Values.reportApiVersion | quote }}
+            {{- if .Values.label }}
+            - name: LABEL
+              value: {{ .Values.label | quote }}
+            {{- end }}
+            {{- if .Values.labelValue }}
+            - name: LABEL_VALUE
+              value: {{ .Values.labelValue | quote }}
+            {{- end }}
+            {{- if .Values.includeNamespaces }}
+            - name: INCLUDE_NAMESPACES
+              value: {{ join "," .Values.includeNamespaces | quote }}
+            {{- end }}
+            {{- if .Values.excludeNamespaces }}
+            - name: EXCLUDE_NAMESPACES
+              value: {{ join "," .Values.excludeNamespaces | quote }}
+            {{- end }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            - name: METRICS_ADDR
+              value: {{ printf ":%v" .Values.metrics.port | quote }}
+            {{- if .Values.httpProxy }}
+            - name: HTTP_PROXY
+              value: {{ .Values.httpProxy | quote }}
+            {{- end }}
+            {{- if .Values.httpsProxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.httpsProxy | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

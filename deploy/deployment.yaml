@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trivy-operator-defectdojo-importer
+  namespace: trivy-system
+  labels:
+    app.kubernetes.io/name: trivy-operator-defectdojo-importer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: trivy-operator-defectdojo-importer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: trivy-operator-defectdojo-importer
+    spec:
+      serviceAccountName: trivy-operator-defectdojo-importer
+      containers:
+        - name: importer
+          image: ghcr.io/yoshz/trivy-operator-defectdojo-importer:latest
+          ports:
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: DEFECT_DOJO_URL
+              value: "https://defectdojo.example.com"
+            - name: DEFECT_DOJO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: trivy-operator-defectdojo-importer
+                  key: DEFECT_DOJO_API_KEY
+            - name: DEFECT_DOJO_ACTIVE
+              value: "true"
+            - name: DEFECT_DOJO_MINIMUM_SEVERITY
+              value: "Medium"
+            - name: REPORTS
+              value: "vulnerabilityreports"
+            # Product type/name rules - see README for details.
+            - name: DEFECT_DOJO_PRODUCT_TYPE_NAME
+              value: "Research and Development"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault

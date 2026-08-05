@@ -1,0 +1,155 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/yoshz/trivy-operator-defectdojo-importer
+  tag: "" # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Creates the ClusterRole/ClusterRoleBinding needed to watch report CRDs
+# cluster-wide and read Pods/ReplicaSets/DaemonSets/StatefulSets/Jobs/
+# CronJobs/ReplicationControllers in order to resolve the pod behind a
+# report. Disable if you manage RBAC separately.
+rbac:
+  create: true
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Extra environment variables appended verbatim (list of EnvVar objects),
+# e.g. for HTTP(S)_PROXY, or fields not otherwise exposed below.
+extraEnv: []
+
+httpProxy: ""
+httpsProxy: ""
+
+metrics:
+  port: 9090
+  service:
+    enabled: true
+    port: 9090
+  # Requires the Prometheus Operator CRDs to be installed.
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}
+
+# --- DefectDojo connection & import behavior -------------------------------
+defectDojo:
+  url: "" # required, e.g. https://defectdojo.example.com
+  apiKey: "" # required unless existingSecret is set
+  existingSecret: "" # name of a pre-existing Secret holding the API key
+  existingSecretKey: "DEFECT_DOJO_API_KEY"
+
+  active: true
+  verified: false
+  closeOldFindings: true
+  closeOldFindingsProductScope: false
+  pushToJira: false
+  minimumSeverity: "Info"
+  autoCreateContext: true
+  deduplicationOnEngagement: true
+  doNotReactivate: false
+
+  # Plain strings, or a Go text/template referencing
+  # .Namespace .ReportName .ReportKind .ResourceKind .ResourceName .PodName .PodLabels
+  engagementName: "{{.Namespace}}"
+  serviceName: ""
+  # Fallback used only when a namespace matches nothing in envNameMap below.
+  envName: "Development"
+  testTitle: "Kubernetes"
+  tags: ""
+
+  # Resolves the "environment" field straight from the report's namespace,
+  # checked in order with the first match winning (pattern is an exact match
+  # or a glob like "review-*"). Empty by default, meaning envName above is
+  # always used. Example:
+  #   envNameMap:
+  #     - pattern: production
+  #       value: Production
+  #     - pattern: acceptance
+  #       value: Acceptance
+  #     - pattern: "review-*"
+  #       value: Review
+  envNameMap: []
+
+  # Fallback product name, used when none of productNameLabels below can be
+  # resolved on either the report's controller or its Pod.
+  productName: "product"
+
+  # Product name is normally the value of the first of these labels found on
+  # the report's immediate controller (e.g. its ReplicaSet/DaemonSet/
+  # StatefulSet, or the Pod itself when the report references a Pod directly);
+  # only if the controller carries none of them is the Pod itself checked too
+  # (see productName above for the final fallback).
+  productNameLabels:
+    - app.kubernetes.io/name
+    - app
+
+  # Fallback product type, used when a namespace matches nothing in
+  # productTypeMap below.
+  productTypeName: "Research and Development"
+
+  # Resolves the "product type" field straight from the report's namespace,
+  # checked in order with the first match winning (pattern is an exact match
+  # or a glob like "review-*"). Empty by default, meaning productTypeName
+  # above is always used. Example:
+  #   productTypeMap:
+  #     - pattern: production
+  #       value: App Stack
+  #     - pattern: acceptance
+  #       value: App Stack
+  #     - pattern: "review-*"
+  #       value: App Stack
+  productTypeMap: []
+
+# Report CRDs to watch. Allowed values: vulnerabilityreports,
+# configauditreports, exposedsecretreports, infraassessmentreports,
+# rbacassessmentreports.
+reports:
+  - vulnerabilityreports
+
+reportApiGroup: aquasecurity.github.io
+reportApiVersion: v1alpha1
+
+# Only watch reports carrying this label (value optional).
+label: ""
+labelValue: ""
+
+# Restrict which namespaces' reports are processed. Entries are exact
+# namespace names or path.Match globs (e.g. "review-*"). includeNamespaces
+# empty means every namespace is a candidate; excludeNamespaces always wins
+# when a namespace matches both. Both empty by default (no filtering).
+includeNamespaces: []
+excludeNamespaces: []
+
+logLevel: INFO
