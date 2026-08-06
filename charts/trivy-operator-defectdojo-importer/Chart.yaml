@@ -2,8 +2,8 @@ apiVersion: v2
 name: trivy-operator-defectdojo-importer
 description: Watches trivy-operator report CRDs and forwards them to DefectDojo, assigning product type/name from namespace and pod labels.
 type: application
-version: 0.1.0
-appVersion: 0.1.0
+version: 0.2.0
+appVersion: 0.2.0
 home: https://github.com/yoshz/trivy-operator-defectdojo-importer
 sources:
   - https://github.com/yoshz/trivy-operator-defectdojo-importer
