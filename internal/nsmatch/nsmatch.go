@@ -2,7 +2,7 @@
 
 // Package nsmatch matches Kubernetes namespace names against patterns -
 // either an exact (case-insensitive) name or a path.Match glob, e.g.
-// "review-*". Shared by the product/environment namespace maps and the
+// "testing-*". Shared by the product/environment namespace maps and the
 // report watcher's include/exclude namespace filtering.
 package nsmatch
 

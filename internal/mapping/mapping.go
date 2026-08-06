@@ -4,13 +4,13 @@
 // business rules that differ from telekom-mms/trivy-dojo-report-operator:
 //
 //   - Product type is resolved from the report's namespace via
-//     ProductTypeNamespaceMap, e.g. production -> App Stack, review-* ->
+//     ProductTypeNamespaceMap, e.g. production -> App Stack, testing-* ->
 //     App Stack. Namespaces matching nothing fall back to ProductTypeDefault.
 //   - Product name is the first of ProductNameLabels found on the report's
 //     immediate controller (e.g. its ReplicaSet), falling back to the Pod
 //     itself if the controller doesn't carry any of them.
 //   - Environment is resolved from the report's namespace via
-//     EnvNameNamespaceMap, e.g. production -> Production, review-* ->
+//     EnvNameNamespaceMap, e.g. production -> Production, testing-* ->
 //     Review.
 package mapping
 

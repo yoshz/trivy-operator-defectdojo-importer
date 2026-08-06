@@ -7,7 +7,7 @@ report CRDs and forwards them to [DefectDojo](https://github.com/DefectDojo/djan
 but written in Go and with fixed naming rules instead of static/eval'd config:
 
 - **Product type** is resolved from the report's namespace via
-  `DEFECT_DOJO_PRODUCT_TYPE_MAP`, e.g. mapping `production`/`review-*` to
+  `DEFECT_DOJO_PRODUCT_TYPE_MAP`, e.g. mapping `production`/`testing-*` to
   `Webapp`. Empty by default; any namespace matching nothing (or when the
   map is unset) falls back to `DEFECT_DOJO_PRODUCT_TYPE_NAME` (`Research and
   Development` by default).
@@ -19,13 +19,13 @@ but written in Go and with fixed naming rules instead of static/eval'd config:
   fallback product name is used instead (`product` by default).
 - **Environment** is resolved from the report's namespace via
   `DEFECT_DOJO_ENV_NAME_MAP`, e.g. mapping `production` to `Production` and
-  `review-*` to `Review`. Empty by default; falls back to
+  `testing-*` to `Review`. Empty by default; falls back to
   `DEFECT_DOJO_ENV_NAME` (`Development` by default) the same way product type
   does.
 
 Both namespace maps use the same syntax: a comma-separated list of
 `pattern=Value` pairs, where `pattern` is either an exact namespace name or a
-glob (`path.Match` syntax, e.g. `review-*`), checked in order with the first
+glob (`path.Match` syntax, e.g. `testing-*`), checked in order with the first
 match winning.
 
 ## How pod resolution works
@@ -69,9 +69,9 @@ and Python `eval()` mechanism with something that isn't a code-injection vector.
 
 `*_MAP` env vars (`DEFECT_DOJO_PRODUCT_TYPE_MAP`, `DEFECT_DOJO_ENV_NAME_MAP`)
 are a comma-separated list of `pattern=Value` pairs, where `pattern` is either
-an exact namespace name or a glob (`path.Match` syntax, e.g. `review-*`),
+an exact namespace name or a glob (`path.Match` syntax, e.g. `testing-*`),
 checked in order with the first match winning, e.g.
-`production=Production,acceptance=Acceptance,review-*=Review`. Both are empty
+`production=Production,acceptance=Acceptance,testing-*=Review`. Both are empty
 by default; a namespace matching nothing (or an empty/unset map) falls back
 to the corresponding `_NAME` field.
 
@@ -103,7 +103,7 @@ to the corresponding `_NAME` field.
 | `REPORT_API_VERSION` | `v1alpha1` | No | |
 | `LABEL` | unset | No | Only watch reports carrying this label |
 | `LABEL_VALUE` | unset | No | Required value for `LABEL` (if unset, any value matches) |
-| `INCLUDE_NAMESPACES` | `""` (empty) | No | Comma-separated namespaces to watch - exact or glob (`path.Match` syntax, e.g. `review-*`); empty means all namespaces |
+| `INCLUDE_NAMESPACES` | `""` (empty) | No | Comma-separated namespaces to watch - exact or glob (`path.Match` syntax, e.g. `testing-*`); empty means all namespaces |
 | `EXCLUDE_NAMESPACES` | `""` (empty) | No | Comma-separated namespaces to skip - exact or glob; always wins over `INCLUDE_NAMESPACES` when both match |
 | `LOG_LEVEL` | `INFO` | No | |
 | `METRICS_ADDR` | `:9090` | No | Serves Prometheus metrics at `/metrics` |
@@ -129,8 +129,8 @@ the resolved pod, product type, product name, and rendered naming fields
 
 ```bash
 KUBECONFIG=/path/to/your/kubeconfig DRY_RUN=true LOG_LEVEL=DEBUG \
-  DEFECT_DOJO_PRODUCT_TYPE_MAP="production=Webapp,acceptance=Webapp,review-*=Webapp" \
-  DEFECT_DOJO_ENV_NAME_MAP="production=Production,acceptance=Acceptance,review-*=Review" \
+  DEFECT_DOJO_PRODUCT_TYPE_MAP="production=Webapp,acceptance=Webapp,testing-*=Webapp" \
+  DEFECT_DOJO_ENV_NAME_MAP="production=Production,acceptance=Acceptance,testing-*=Review" \
   go run ./cmd/importer
 ```
 
@@ -149,7 +149,7 @@ level=INFO msg="dry-run: resolved report mapping (nothing sent to DefectDojo)" k
 during testing, e.g. `REPORTS=vulnerabilityreports`), `LABEL`/`LABEL_VALUE`
 further narrow it to reports carrying a specific label, and
 `INCLUDE_NAMESPACES`/`EXCLUDE_NAMESPACES` narrow it by namespace, e.g.
-`INCLUDE_NAMESPACES=production,review-*` to only see reports from those.
+`INCLUDE_NAMESPACES=production,testing-*` to only see reports from those.
 
 ## Known differences from telekom-mms/trivy-dojo-report-operator
 

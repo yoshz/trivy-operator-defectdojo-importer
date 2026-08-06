@@ -93,14 +93,14 @@ defectDojo:
 
   # Resolves the "environment" field straight from the report's namespace,
   # checked in order with the first match winning (pattern is an exact match
-  # or a glob like "review-*"). Empty by default, meaning envName above is
+  # or a glob like "testing-*"). Empty by default, meaning envName above is
   # always used. Example:
   #   envNameMap:
   #     - pattern: production
   #       value: Production
   #     - pattern: acceptance
   #       value: Acceptance
-  #     - pattern: "review-*"
+  #     - pattern: "testing-*"
   #       value: Review
   envNameMap: []
 
@@ -123,14 +123,14 @@ defectDojo:
 
   # Resolves the "product type" field straight from the report's namespace,
   # checked in order with the first match winning (pattern is an exact match
-  # or a glob like "review-*"). Empty by default, meaning productTypeName
+  # or a glob like "testing-*"). Empty by default, meaning productTypeName
   # above is always used. Example:
   #   productTypeMap:
   #     - pattern: production
   #       value: App Stack
   #     - pattern: acceptance
   #       value: App Stack
-  #     - pattern: "review-*"
+  #     - pattern: "testing-*"
   #       value: App Stack
   productTypeMap: []
 
@@ -148,7 +148,7 @@ label: ""
 labelValue: ""
 
 # Restrict which namespaces' reports are processed. Entries are exact
-# namespace names or path.Match globs (e.g. "review-*"). includeNamespaces
+# namespace names or path.Match globs (e.g. "testing-*"). includeNamespaces
 # empty means every namespace is a candidate; excludeNamespaces always wins
 # when a namespace matches both. Both empty by default (no filtering).
 includeNamespaces: []

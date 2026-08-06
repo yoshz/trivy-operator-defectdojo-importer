@@ -12,10 +12,10 @@ func TestMatch(t *testing.T) {
 		{"production", "production", true},
 		{"Production", "production", true}, // case-insensitive exact match
 		{"production", "staging", false},
-		{"review-*", "review-123", true},
-		{"review-*", "review-", true},
-		{"review-*", "reviewsomehow", false},
-		{"review-*", "staging", false},
+		{"testing-*", "testing-123", true},
+		{"testing-*", "testing-", true},
+		{"testing-*", "testingsomehow", false},
+		{"testing-*", "staging", false},
 	}
 	for _, c := range cases {
 		if got := Match(c.pattern, c.namespace); got != c.want {
@@ -25,13 +25,13 @@ func TestMatch(t *testing.T) {
 }
 
 func TestMatchAny(t *testing.T) {
-	patterns := []string{"production", "acceptance", "review-*"}
+	patterns := []string{"production", "acceptance", "testing-*"}
 	cases := map[string]bool{
-		"production": true,
-		"acceptance": true,
-		"review-123": true,
-		"staging":    false,
-		"default":    false,
+		"production":  true,
+		"acceptance":  true,
+		"testing-123": true,
+		"staging":     false,
+		"default":     false,
 	}
 	for ns, want := range cases {
 		if got := MatchAny(patterns, ns); got != want {

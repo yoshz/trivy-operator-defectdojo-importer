@@ -17,12 +17,12 @@ func TestNamespaceAllowed(t *testing.T) {
 		want      bool
 	}{
 		{"no filters allows everything", nil, nil, "anything", true},
-		{"include matches", []string{"production", "review-*"}, nil, "review-123", true},
+		{"include matches", []string{"production", "testing-*"}, nil, "testing-123", true},
 		{"include excludes non-matching", []string{"production"}, nil, "staging", false},
 		{"exclude blocks matching", nil, []string{"kube-system"}, "kube-system", false},
 		{"exclude glob blocks matching", nil, []string{"kube-*"}, "kube-public", false},
 		{"exclude doesn't affect others", nil, []string{"kube-system"}, "production", true},
-		{"exclude wins over include", []string{"production", "review-*"}, []string{"review-*"}, "review-123", false},
+		{"exclude wins over include", []string{"production", "testing-*"}, []string{"testing-*"}, "testing-123", false},
 		{"include and exclude both non-matching stays included", []string{"production"}, []string{"kube-system"}, "production", true},
 	}
 

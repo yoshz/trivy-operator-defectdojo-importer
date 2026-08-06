@@ -46,13 +46,13 @@ type Config struct {
 	ProductTypeDefault  string // used when namespace matches nothing in ProductTypeNamespaceMap
 
 	// ProductTypeNamespaceMap resolves the DefectDojo product type from the
-	// report's namespace, e.g. production -> App Stack, review-* -> App
+	// report's namespace, e.g. production -> App Stack, testing-* -> App
 	// Stack. Checked in order; the first match wins. Namespaces that match
 	// nothing fall back to ProductTypeDefault.
 	ProductTypeNamespaceMap []NamespaceValueMapping
 
 	// EnvNameNamespaceMap resolves the DefectDojo environment name from the
-	// report's namespace, e.g. production -> Production, review-* ->
+	// report's namespace, e.g. production -> Production, testing-* ->
 	// Review. Checked in order; the first match wins. Namespaces that match
 	// nothing fall back to EnvNameTemplate.
 	EnvNameNamespaceMap []NamespaceValueMapping
@@ -65,7 +65,7 @@ type Config struct {
 	LabelValue    string
 
 	// IncludeNamespaces/ExcludeNamespaces filter which namespaces' reports
-	// are processed (exact match or path.Match glob, e.g. "review-*").
+	// are processed (exact match or path.Match glob, e.g. "testing-*").
 	// IncludeNamespaces empty means all namespaces are candidates.
 	// ExcludeNamespaces always wins over IncludeNamespaces when both match.
 	IncludeNamespaces []string
@@ -82,7 +82,7 @@ type Config struct {
 }
 
 // NamespaceValueMapping pairs a namespace match (exact or path.Match glob,
-// e.g. "review-*") with a value to use when a report's namespace matches it.
+// e.g. "testing-*") with a value to use when a report's namespace matches it.
 type NamespaceValueMapping struct {
 	Pattern string
 	Value   string
@@ -205,7 +205,7 @@ func splitCSV(s string) []string {
 }
 
 // parseNamespaceValueMap parses a comma-separated list of pattern=value
-// pairs, e.g. "production=Production,review-*=Review". Empty input returns
+// pairs, e.g. "production=Production,testing-*=Review". Empty input returns
 // a nil (empty) mapping.
 func parseNamespaceValueMap(s string) ([]NamespaceValueMapping, error) {
 	if s == "" {

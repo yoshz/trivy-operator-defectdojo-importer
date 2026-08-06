@@ -17,12 +17,12 @@ func testConfig() *config.Config {
 			{Pattern: "production", Value: "App Stack"},
 			{Pattern: "acceptance", Value: "App Stack"},
 			{Pattern: "demo", Value: "App Stack"},
-			{Pattern: "review-*", Value: "App Stack"},
+			{Pattern: "testing-*", Value: "App Stack"},
 		},
 		EnvNameNamespaceMap: []config.NamespaceValueMapping{
 			{Pattern: "production", Value: "Production"},
 			{Pattern: "acceptance", Value: "Acceptance"},
-			{Pattern: "review-*", Value: "Review"},
+			{Pattern: "testing-*", Value: "Review"},
 		},
 	}
 }
@@ -30,14 +30,14 @@ func testConfig() *config.Config {
 func TestProductType(t *testing.T) {
 	cfg := testConfig()
 	cases := map[string]string{
-		"production":    "App Stack",
-		"acceptance":    "App Stack",
-		"demo":          "App Stack",
-		"review-123":    "App Stack",
-		"review-":       "App Stack",
-		"staging":       "Research and Development",
-		"default":       "Research and Development",
-		"reviewsomehow": "Research and Development",
+		"production":     "App Stack",
+		"acceptance":     "App Stack",
+		"demo":           "App Stack",
+		"testing-123":    "App Stack",
+		"testing-":       "App Stack",
+		"staging":        "Research and Development",
+		"default":        "Research and Development",
+		"testingsomehow": "Research and Development",
 	}
 	for ns, want := range cases {
 		if got := ProductType(cfg, ns); got != want {
@@ -58,10 +58,10 @@ func TestProductTypeEmptyMapFallsBackToDefault(t *testing.T) {
 func TestEnvironment(t *testing.T) {
 	cfg := testConfig()
 	cases := map[string]string{
-		"production": "Production",
-		"acceptance": "Acceptance",
-		"review-123": "Review",
-		"review-":    "Review",
+		"production":  "Production",
+		"acceptance":  "Acceptance",
+		"testing-123": "Review",
+		"testing-":    "Review",
 	}
 	for ns, want := range cases {
 		got, ok := Environment(cfg, ns)

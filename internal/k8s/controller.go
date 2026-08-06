@@ -88,7 +88,7 @@ type reportWatcher struct {
 	gvr      schema.GroupVersionResource
 	factory  dynamicinformer.DynamicSharedInformerFactory
 	informer cache.SharedIndexInformer
-	queue    workqueue.RateLimitingInterface
+	queue    workqueue.TypedRateLimitingInterface[string]
 }
 
 func (c *Controller) newReportWatcher(resource string) *reportWatcher {
@@ -114,7 +114,7 @@ func (c *Controller) newReportWatcher(resource string) *reportWatcher {
 	)
 
 	informer := factory.ForResource(gvr).Informer()
-	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	queue := workqueue.NewTypedRateLimitingQueue[string](workqueue.DefaultTypedControllerRateLimiter[string]())
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -147,7 +147,7 @@ func (w *reportWatcher) processNextItem(ctx context.Context, c *Controller) bool
 	}
 	defer w.queue.Done(key)
 
-	obj, exists, err := w.informer.GetIndexer().GetByKey(key.(string))
+	obj, exists, err := w.informer.GetIndexer().GetByKey(key)
 	if err != nil {
 		slog.Error("fetching object from cache", "key", key, "error", err)
 		w.queue.AddRateLimited(key)
