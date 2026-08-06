@@ -54,3 +54,5 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+        runAsUser: 65532
+        runAsGroup: 65532
