@@ -11,7 +11,7 @@
 //     itself if the controller doesn't carry any of them.
 //   - Environment is resolved from the report's namespace via
 //     EnvNameNamespaceMap, e.g. production -> Production, testing-* ->
-//     Review.
+//     Testing.
 package mapping
 
 import (

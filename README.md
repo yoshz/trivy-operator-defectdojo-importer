@@ -19,7 +19,7 @@ but written in Go and with fixed naming rules instead of static/eval'd config:
   fallback product name is used instead (`product` by default).
 - **Environment** is resolved from the report's namespace via
   `DEFECT_DOJO_ENV_NAME_MAP`, e.g. mapping `production` to `Production` and
-  `testing-*` to `Review`. Empty by default; falls back to
+  `testing-*` to `Testing`. Empty by default; falls back to
   `DEFECT_DOJO_ENV_NAME` (`Development` by default) the same way product type
   does.
 
@@ -71,7 +71,7 @@ and Python `eval()` mechanism with something that isn't a code-injection vector.
 are a comma-separated list of `pattern=Value` pairs, where `pattern` is either
 an exact namespace name or a glob (`path.Match` syntax, e.g. `testing-*`),
 checked in order with the first match winning, e.g.
-`production=Production,acceptance=Acceptance,testing-*=Review`. Both are empty
+`production=Production,acceptance=Acceptance,testing-*=Testing`. Both are empty
 by default; a namespace matching nothing (or an empty/unset map) falls back
 to the corresponding `_NAME` field.
 
@@ -130,7 +130,7 @@ the resolved pod, product type, product name, and rendered naming fields
 ```bash
 KUBECONFIG=/path/to/your/kubeconfig DRY_RUN=true LOG_LEVEL=DEBUG \
   DEFECT_DOJO_PRODUCT_TYPE_MAP="production=Webapp,acceptance=Webapp,testing-*=Webapp" \
-  DEFECT_DOJO_ENV_NAME_MAP="production=Production,acceptance=Acceptance,testing-*=Review" \
+  DEFECT_DOJO_ENV_NAME_MAP="production=Production,acceptance=Acceptance,testing-*=Testing" \
   go run ./cmd/importer
 ```
 

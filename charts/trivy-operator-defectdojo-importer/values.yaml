@@ -101,7 +101,7 @@ defectDojo:
   #     - pattern: acceptance
   #       value: Acceptance
   #     - pattern: "testing-*"
-  #       value: Review
+  #       value: Testing
   envNameMap: []
 
   # Fallback product name, used when none of productNameLabels below can be

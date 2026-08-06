@@ -22,7 +22,7 @@ func testConfig() *config.Config {
 		EnvNameNamespaceMap: []config.NamespaceValueMapping{
 			{Pattern: "production", Value: "Production"},
 			{Pattern: "acceptance", Value: "Acceptance"},
-			{Pattern: "testing-*", Value: "Review"},
+			{Pattern: "testing-*", Value: "Testing"},
 		},
 	}
 }
@@ -60,8 +60,8 @@ func TestEnvironment(t *testing.T) {
 	cases := map[string]string{
 		"production":  "Production",
 		"acceptance":  "Acceptance",
-		"testing-123": "Review",
-		"testing-":    "Review",
+		"testing-123": "Testing",
+		"testing-":    "Testing",
 	}
 	for ns, want := range cases {
 		got, ok := Environment(cfg, ns)

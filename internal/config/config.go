@@ -53,7 +53,7 @@ type Config struct {
 
 	// EnvNameNamespaceMap resolves the DefectDojo environment name from the
 	// report's namespace, e.g. production -> Production, testing-* ->
-	// Review. Checked in order; the first match wins. Namespaces that match
+	// Testing. Checked in order; the first match wins. Namespaces that match
 	// nothing fall back to EnvNameTemplate.
 	EnvNameNamespaceMap []NamespaceValueMapping
 
@@ -205,7 +205,7 @@ func splitCSV(s string) []string {
 }
 
 // parseNamespaceValueMap parses a comma-separated list of pattern=value
-// pairs, e.g. "production=Production,testing-*=Review". Empty input returns
+// pairs, e.g. "production=Production,testing-*=Testing". Empty input returns
 // a nil (empty) mapping.
 func parseNamespaceValueMap(s string) ([]NamespaceValueMapping, error) {
 	if s == "" {
