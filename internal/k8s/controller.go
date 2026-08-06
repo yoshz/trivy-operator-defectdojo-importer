@@ -210,9 +210,6 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 		}
 	}
 
-	productType := mapping.ProductType(c.cfg, namespace)
-	productName := mapping.ProductName(c.cfg, result.ControllerLabels, podLabels)
-
 	nctx := naming.Context{
 		Namespace:    namespace,
 		ReportName:   name,
@@ -221,6 +218,21 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 		ResourceName: resourceName,
 		PodName:      podName,
 		PodLabels:    podLabels,
+	}
+
+	productType, ok := mapping.ProductType(c.cfg, namespace)
+	if !ok {
+		productType, err = naming.Render(c.cfg.ProductTypeDefault, nctx)
+		if err != nil {
+			return fmt.Errorf("rendering product type: %w", err)
+		}
+	}
+	productName, ok := mapping.ProductName(c.cfg, result.ControllerLabels, podLabels)
+	if !ok {
+		productName, err = naming.Render(c.cfg.ProductNameFallback, nctx)
+		if err != nil {
+			return fmt.Errorf("rendering product name: %w", err)
+		}
 	}
 
 	engagementName, err := naming.Render(c.cfg.EngagementNameTemplate, nctx)

@@ -5,10 +5,13 @@
 //
 //   - Product type is resolved from the report's namespace via
 //     ProductTypeNamespaceMap, e.g. production -> App Stack, testing-* ->
-//     App Stack. Namespaces matching nothing fall back to ProductTypeDefault.
+//     App Stack. Namespaces matching nothing fall back to ProductTypeDefault,
+//     a naming template rendered by the caller.
 //   - Product name is the first of ProductNameLabels found on the report's
 //     immediate controller (e.g. its ReplicaSet), falling back to the Pod
-//     itself if the controller doesn't carry any of them.
+//     itself if the controller doesn't carry any of them. If nothing is
+//     found on either, it falls back to ProductNameFallback, a naming
+//     template rendered by the caller.
 //   - Environment is resolved from the report's namespace via
 //     EnvNameNamespaceMap, e.g. production -> Production, testing-* ->
 //     Testing.
@@ -21,12 +24,11 @@ import (
 
 // ProductType returns the DefectDojo product type name for a report found in
 // the given namespace, per cfg.ProductTypeNamespaceMap (checked in order,
-// first match wins). Namespaces matching nothing get cfg.ProductTypeDefault.
-func ProductType(cfg *config.Config, namespace string) string {
-	if v, ok := matchNamespaceMap(cfg.ProductTypeNamespaceMap, namespace); ok {
-		return v
-	}
-	return cfg.ProductTypeDefault
+// first match wins). The second return value is false when no entry
+// matched, in which case the caller should render cfg.ProductTypeDefault as
+// a naming template.
+func ProductType(cfg *config.Config, namespace string) (string, bool) {
+	return matchNamespaceMap(cfg.ProductTypeNamespaceMap, namespace)
 }
 
 // Environment returns the DefectDojo environment name for a report found in
@@ -53,18 +55,19 @@ func matchNamespaceMap(m []config.NamespaceValueMapping, namespace string) (stri
 // report's immediate controller, e.g. a ReplicaSet - or the Pod itself when
 // the report references a Pod directly); only if none of them are found
 // there does it fall back to checking the same keys, in order, against
-// podLabels. If nothing matches in either map, cfg.ProductNameFallback is
-// used. Either map may be nil.
-func ProductName(cfg *config.Config, controllerLabels, podLabels map[string]string) string {
+// podLabels. Either map may be nil. The second return value is false when
+// nothing matched in either map, in which case the caller should render
+// cfg.ProductNameFallback as a naming template.
+func ProductName(cfg *config.Config, controllerLabels, podLabels map[string]string) (string, bool) {
 	for _, key := range cfg.ProductNameLabels {
 		if v := controllerLabels[key]; v != "" {
-			return v
+			return v, true
 		}
 	}
 	for _, key := range cfg.ProductNameLabels {
 		if v := podLabels[key]; v != "" {
-			return v
+			return v, true
 		}
 	}
-	return cfg.ProductNameFallback
+	return "", false
 }

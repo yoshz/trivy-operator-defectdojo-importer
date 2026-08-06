@@ -9,14 +9,15 @@ but written in Go and with fixed naming rules instead of static/eval'd config:
 - **Product type** is resolved from the report's namespace via
   `DEFECT_DOJO_PRODUCT_TYPE_MAP`, e.g. mapping `production`/`testing-*` to
   `Webapp`. Empty by default; any namespace matching nothing (or when the
-  map is unset) falls back to `DEFECT_DOJO_PRODUCT_TYPE_NAME` (`Research and
-  Development` by default).
+  map is unset) falls back to `DEFECT_DOJO_PRODUCT_TYPE_NAME` (a naming
+  template, `Research and Development` by default).
 - **Product name** is the value of the first matching label in
   `DEFECT_DOJO_PRODUCT_NAME_LABELS` (`app.kubernetes.io/name`,
   `app` by default) - checked first on the report's *immediate controller*
   (e.g. its ReplicaSet), and only if none of them are found there, on the
-  Kubernetes **Pod** itself. If nothing can be resolved, a configurable
-  fallback product name is used instead (`product` by default).
+  Kubernetes **Pod** itself. If nothing can be resolved, `DEFECT_DOJO_PRODUCT_NAME`
+  (a naming template, `{{.ResourceName}}` by default - i.e. the underlying
+  Kubernetes resource's name) is used instead.
 - **Environment** is resolved from the report's namespace via
   `DEFECT_DOJO_ENV_NAME_MAP`, e.g. mapping `production` to `Production` and
   `testing-*` to `Testing`. Empty by default; falls back to
@@ -61,11 +62,16 @@ the same semantics as the upstream Python operator: only the literal string
 `"true"` is truthy, anything else (including unset) is `false`.
 
 `*_NAME` naming fields (`DEFECT_DOJO_ENGAGEMENT_NAME`, `DEFECT_DOJO_SERVICE_NAME`,
-`DEFECT_DOJO_ENV_NAME`, `DEFECT_DOJO_TEST_TITLE`, `DEFECT_DOJO_TAGS`) accept
-plain strings or a [Go text/template](https://pkg.go.dev/text/template)
-referencing `.Namespace .ReportName .ReportKind .ResourceKind .ResourceName
-.PodName .PodLabels`. This replaces the upstream operator's `DEFECT_DOJO_EVAL_*`
-and Python `eval()` mechanism with something that isn't a code-injection vector.
+`DEFECT_DOJO_ENV_NAME`, `DEFECT_DOJO_TEST_TITLE`, `DEFECT_DOJO_TAGS`,
+`DEFECT_DOJO_PRODUCT_NAME`, `DEFECT_DOJO_PRODUCT_TYPE_NAME`) accept plain
+strings or a [Go text/template](https://pkg.go.dev/text/template) referencing
+`.Namespace .ReportName .ReportKind .ResourceKind .ResourceName .PodName
+.PodLabels`. This replaces the upstream operator's `DEFECT_DOJO_EVAL_*` and
+Python `eval()` mechanism with something that isn't a code-injection vector.
+Note `DEFECT_DOJO_PRODUCT_NAME` and `DEFECT_DOJO_PRODUCT_TYPE_NAME` are only
+*fallbacks* - rendered only when `DEFECT_DOJO_PRODUCT_NAME_LABELS`/
+`DEFECT_DOJO_PRODUCT_TYPE_MAP` don't resolve a value for a given report (see
+above).
 
 `*_MAP` env vars (`DEFECT_DOJO_PRODUCT_TYPE_MAP`, `DEFECT_DOJO_ENV_NAME_MAP`)
 are a comma-separated list of `pattern=Value` pairs, where `pattern` is either
@@ -94,9 +100,9 @@ to the corresponding `_NAME` field.
 | `DEFECT_DOJO_ENV_NAME_MAP` | `""` (empty) | No | Namespace → environment name map (see above) |
 | `DEFECT_DOJO_TEST_TITLE` | `Kubernetes` | No | Test title (string or template) |
 | `DEFECT_DOJO_TAGS` | `""` (empty) | No | Comma-separated tags (string or template) |
-| `DEFECT_DOJO_PRODUCT_NAME` | `product` | No | Fallback product name when none of `DEFECT_DOJO_PRODUCT_NAME_LABELS` can be resolved |
+| `DEFECT_DOJO_PRODUCT_NAME` | `{{.ResourceName}}` | No | Fallback product name (string or template), used when none of `DEFECT_DOJO_PRODUCT_NAME_LABELS` can be resolved |
 | `DEFECT_DOJO_PRODUCT_NAME_LABELS` | `app.kubernetes.io/name,app` | No | Comma-separated label keys for the product name, checked in order, on the controller before the Pod (see "How pod resolution works" above) |
-| `DEFECT_DOJO_PRODUCT_TYPE_NAME` | `Research and Development` | No | Product type fallback, used when `DEFECT_DOJO_PRODUCT_TYPE_MAP` doesn't match |
+| `DEFECT_DOJO_PRODUCT_TYPE_NAME` | `Research and Development` | No | Product type fallback (string or template), used when `DEFECT_DOJO_PRODUCT_TYPE_MAP` doesn't match |
 | `DEFECT_DOJO_PRODUCT_TYPE_MAP` | `""` (empty) | No | Namespace → product type map (see above) |
 | `REPORTS` | `vulnerabilityreports` | No | Comma-separated report CRDs to watch: `vulnerabilityreports`, `configauditreports`, `exposedsecretreports`, `infraassessmentreports`, `rbacassessmentreports` |
 | `REPORT_API_GROUP` | `aquasecurity.github.io` | No | |

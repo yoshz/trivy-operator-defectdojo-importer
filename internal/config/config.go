@@ -35,15 +35,18 @@ type Config struct {
 	TestTitleTemplate      string
 	TagsTemplate           string
 
-	// Product naming rules (not templated - fixed business rules per spec)
-	//
 	// ProductNameLabels are checked in order, first on the report's immediate
 	// controller (e.g. the ReplicaSet/DaemonSet/StatefulSet - or the Pod
 	// itself when the report references a Pod directly), then - only if none
-	// of them were found there - on the Pod itself.
-	ProductNameLabels   []string
-	ProductNameFallback string // used when none of ProductNameLabels can be resolved
-	ProductTypeDefault  string // used when namespace matches nothing in ProductTypeNamespaceMap
+	// of them were found there - on the Pod itself. Not templated: these are
+	// label keys, matched verbatim against the resolved labels.
+	ProductNameLabels []string
+
+	// ProductNameFallback and ProductTypeDefault are naming templates (same
+	// syntax/fields as above), rendered only when ProductNameLabels /
+	// ProductTypeNamespaceMap didn't resolve a value for this report.
+	ProductNameFallback string
+	ProductTypeDefault  string
 
 	// ProductTypeNamespaceMap resolves the DefectDojo product type from the
 	// report's namespace, e.g. production -> App Stack, testing-* -> App
@@ -140,7 +143,7 @@ func Load() (*Config, error) {
 		TagsTemplate:           getString("DEFECT_DOJO_TAGS", ""),
 
 		ProductNameLabels:   splitCSV(getString("DEFECT_DOJO_PRODUCT_NAME_LABELS", "app.kubernetes.io/name,app")),
-		ProductNameFallback: getString("DEFECT_DOJO_PRODUCT_NAME", "product"),
+		ProductNameFallback: getString("DEFECT_DOJO_PRODUCT_NAME", "{{.ResourceName}}"),
 		ProductTypeDefault:  getString("DEFECT_DOJO_PRODUCT_TYPE_NAME", "Research and Development"),
 
 		ProductTypeNamespaceMap: productTypeMap,

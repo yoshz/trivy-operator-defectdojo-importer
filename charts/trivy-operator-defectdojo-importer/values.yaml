@@ -104,8 +104,10 @@ defectDojo:
   #       value: Testing
   envNameMap: []
 
-  # Fallback product name, used when none of productNameLabels below can be
-  # resolved on either the report's controller or its Pod.
+  # Fallback product name (plain string or Go text/template, same syntax as
+  # engagementName above), used when none of productNameLabels below can be
+  # resolved on either the report's controller or its Pod. Defaults to the
+  # underlying Kubernetes resource's name.
   productName: "product"
 
   # Product name is normally the value of the first of these labels found on
@@ -117,7 +119,8 @@ defectDojo:
     - app.kubernetes.io/name
     - app
 
-  # Fallback product type, used when a namespace matches nothing in
+  # Fallback product type (plain string or Go text/template, same syntax as
+  # engagementName above), used when a namespace matches nothing in
   # productTypeMap below.
   productTypeName: "Research and Development"
 
