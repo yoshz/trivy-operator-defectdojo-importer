@@ -21,11 +21,11 @@ import (
 
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/config"
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/defectdojo"
+	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/labelresolve"
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/mapping"
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/metrics"
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/naming"
 	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/nsmatch"
-	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/podresolve"
 )
 
 const resyncPeriod = 10 * time.Hour
@@ -35,7 +35,7 @@ const resyncPeriod = 10 * time.Hour
 type Controller struct {
 	cfg       *config.Config
 	dynClient dynamic.Interface
-	resolver  *podresolve.Resolver
+	resolver  *labelresolve.Resolver
 	dd        *defectdojo.Client
 }
 
@@ -43,7 +43,7 @@ func NewController(cfg *config.Config, dynClient dynamic.Interface, clientset ku
 	return &Controller{
 		cfg:       cfg,
 		dynClient: dynClient,
-		resolver:  podresolve.New(clientset),
+		resolver:  labelresolve.New(clientset, dynClient),
 		dd:        dd,
 	}
 }
@@ -186,9 +186,9 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 	slog.Info("processing report", "kind", kind, "name", name, "namespace", namespace)
 
 	labels := obj.GetLabels()
-	resourceKind := labels[podresolve.LabelResourceKind]
-	resourceName := labels[podresolve.LabelResourceName]
-	resourceNamespace := labels[podresolve.LabelResourceNamespace]
+	resourceKind := labels[labelresolve.LabelResourceKind]
+	resourceName := labels[labelresolve.LabelResourceName]
+	resourceNamespace := labels[labelresolve.LabelResourceNamespace]
 	if resourceNamespace == "" {
 		resourceNamespace = namespace
 	}
@@ -197,17 +197,10 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 		resourceName = name
 	}
 
-	var podName string
-	var podLabels map[string]string
-	result, err := c.resolver.Resolve(ctx, resourceNamespace, resourceKind, resourceName)
+	resourceLabels, err := c.resolver.Resolve(ctx, resourceNamespace, resourceKind, resourceName)
 	if err != nil {
 		slog.Warn("could not resolve related pod or controller, falling back to default product name",
 			"namespace", resourceNamespace, "resourceKind", resourceKind, "resourceName", resourceName, "error", err)
-	} else {
-		if result.Pod != nil {
-			podName = result.Pod.Name
-			podLabels = result.Pod.Labels
-		}
 	}
 
 	nctx := naming.Context{
@@ -216,8 +209,6 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 		ReportKind:   kind,
 		ResourceKind: resourceKind,
 		ResourceName: resourceName,
-		PodName:      podName,
-		PodLabels:    podLabels,
 	}
 
 	productType, ok := mapping.ProductType(c.cfg, namespace)
@@ -227,7 +218,7 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 			return fmt.Errorf("rendering product type: %w", err)
 		}
 	}
-	productName, ok := mapping.ProductName(c.cfg, result.ControllerLabels, podLabels)
+	productName, ok := mapping.ProductName(c.cfg, resourceLabels)
 	if !ok {
 		productName, err = naming.Render(c.cfg.ProductNameFallback, nctx)
 		if err != nil {
@@ -268,11 +259,11 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 	if c.cfg.DryRun {
 		slog.Info("dry-run: resolved report mapping (nothing sent to DefectDojo)",
 			"kind", kind, "report", name, "namespace", namespace,
-			"resourceKind", resourceKind, "resourceName", resourceName,
-			"podName", podName, "controllerLabels", result.ControllerLabels, "podLabels", podLabels,
 			"productType", productType, "productName", productName,
 			"engagement", engagementName, "service", service, "environment", environment,
-			"testTitle", testTitle, "tags", tags)
+			"testTitle", testTitle, "tags", tags,
+			"resourceKind", resourceKind, "resourceName", resourceName,
+			"resourceLabels", resourceLabels)
 		metrics.RequestsTotal.WithLabelValues("dry-run").Inc()
 		return nil
 	}

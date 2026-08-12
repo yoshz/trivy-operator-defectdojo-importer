@@ -13,9 +13,10 @@ but written in Go and with fixed naming rules instead of static/eval'd config:
   template, `Research and Development` by default).
 - **Product name** is the value of the first matching label in
   `DEFECT_DOJO_PRODUCT_NAME_LABELS` (`app.kubernetes.io/name`,
-  `app` by default) - checked first on the report's *immediate controller*
-  (e.g. its ReplicaSet), and only if none of them are found there, on the
-  Kubernetes **Pod** itself. If nothing can be resolved, `DEFECT_DOJO_PRODUCT_NAME`
+  `app` by default), looked up in the resolved resource labels (see
+  [How resource resolution works](#how-resource-resolution-works) below -
+  the report's *immediate controller*, e.g. its ReplicaSet, merged with its
+  Pod's labels). If nothing can be resolved, `DEFECT_DOJO_PRODUCT_NAME`
   (a naming template, `{{.ResourceName}}` by default - i.e. the underlying
   Kubernetes resource's name) is used instead.
 - **Environment** is resolved from the report's namespace via
@@ -29,7 +30,7 @@ Both namespace maps use the same syntax: a comma-separated list of
 glob (`path.Match` syntax, e.g. `testing-*`), checked in order with the first
 match winning.
 
-## How pod resolution works
+## How resource resolution works
 
 trivy-operator stamps every report with labels identifying the resource it
 scanned:
@@ -40,19 +41,25 @@ trivy-operator.resource.name: nginx-6d4cf56db6
 trivy-operator.resource.namespace: default
 ```
 
-That resource is always the *immediate* controller of the Pod (`Pod`,
-`ReplicaSet`, `DaemonSet`, `StatefulSet`, `Job` or `ReplicationController`),
-so the importer looks up the referenced object directly (to read its own
-labels) and also finds a Pod it owns (to read that Pod's labels as a
-fallback). `CronJob` and `Deployment` are also handled defensively (by
-walking `CronJob -> Job -> Pod` / `Deployment -> ReplicaSet -> Pod` for the
-Pod lookup, while still reading labels off the CronJob/Deployment object
-itself) even though trivy-operator doesn't normally reference them directly.
+The importer looks up that referenced object directly (to read its own
+labels), whatever kind it is - not just Pod-owning workloads. For
+`VulnerabilityReport`, that's normally the *immediate* controller of a Pod
+(`Pod`, `ReplicaSet`, `DaemonSet`, `StatefulSet`, `Job` or
+`ReplicationController`), so the importer additionally finds the Pod it
+owns and merges in that Pod's labels, with the controller object's own
+labels winning on key conflicts. `CronJob` and `Deployment` are also
+handled defensively for Pod lookup (by walking `CronJob -> Job -> Pod` /
+`Deployment -> ReplicaSet -> Pod`) even though trivy-operator doesn't
+normally reference them directly. Other report kinds (`ConfigAuditReport`,
+`RbacAssessmentReport`, `InfraAssessmentReport`, ...) can reference
+resources that never own a Pod - `Service`, `Ingress`, `ConfigMap`, `Node`,
+`Role`, etc. - for these only the referenced object's own labels are read;
+there's no Pod to merge in.
 
 For product name resolution specifically, every key in `DEFECT_DOJO_PRODUCT_NAME_LABELS`
-is checked against the controller object first; only if *none* of them are
-present there does the importer fall back to checking the same keys, in the
-same order, against the Pod.
+is checked against the referenced object first; only if *none* of them are
+present there, and a Pod was resolved, does the importer fall back to
+checking the same keys, in the same order, against the Pod.
 
 ## Configuration
 
@@ -65,8 +72,8 @@ the same semantics as the upstream Python operator: only the literal string
 `DEFECT_DOJO_ENV_NAME`, `DEFECT_DOJO_TEST_TITLE`, `DEFECT_DOJO_TAGS`,
 `DEFECT_DOJO_PRODUCT_NAME`, `DEFECT_DOJO_PRODUCT_TYPE_NAME`) accept plain
 strings or a [Go text/template](https://pkg.go.dev/text/template) referencing
-`.Namespace .ReportName .ReportKind .ResourceKind .ResourceName .PodName
-.PodLabels`. This replaces the upstream operator's `DEFECT_DOJO_EVAL_*` and
+`.Namespace .ReportName .ReportKind .ResourceKind .ResourceName`. This
+replaces the upstream operator's `DEFECT_DOJO_EVAL_*` and
 Python `eval()` mechanism with something that isn't a code-injection vector.
 Note `DEFECT_DOJO_PRODUCT_NAME` and `DEFECT_DOJO_PRODUCT_TYPE_NAME` are only
 *fallbacks* - rendered only when `DEFECT_DOJO_PRODUCT_NAME_LABELS`/

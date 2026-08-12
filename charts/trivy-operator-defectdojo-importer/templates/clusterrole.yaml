@@ -25,4 +25,16 @@ rules:
   - apiGroups: ["batch"]
     resources: ["jobs", "cronjobs"]
     verbs: ["get", "list", "watch"]
+  # Needed to read labels off the resource kinds that ConfigAuditReport,
+  # RbacAssessmentReport and InfraAssessmentReport can reference directly
+  # (not just Pod-owning workloads).
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "namespaces", "limitranges", "resourcequotas", "serviceaccounts", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "networkpolicies"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+    verbs: ["get", "list", "watch"]
 {{- end }}

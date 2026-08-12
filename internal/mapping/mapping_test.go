@@ -91,36 +91,12 @@ func TestEnvironment(t *testing.T) {
 func TestProductName(t *testing.T) {
 	cfg := testConfig()
 
-	t.Run("controller label takes priority over pod label", func(t *testing.T) {
-		controllerLabels := map[string]string{"app.kubernetes.io/name": "controller-app"}
-		podLabels := map[string]string{"app.kubernetes.io/name": "pod-app"}
-		got, ok := ProductName(cfg, controllerLabels, podLabels)
-		if !ok {
-			t.Fatal("ProductName matched nothing, want controller-app")
-		}
-		if got != "controller-app" {
-			t.Errorf("ProductName = %q, want controller-app", got)
-		}
-	})
-
-	t.Run("falls back to pod label when controller has none of the keys", func(t *testing.T) {
-		controllerLabels := map[string]string{"unrelated": "x"}
-		podLabels := map[string]string{"app.kubernetes.io/name": "pod-app"}
-		got, ok := ProductName(cfg, controllerLabels, podLabels)
-		if !ok {
-			t.Fatal("ProductName matched nothing, want pod-app")
-		}
-		if got != "pod-app" {
-			t.Errorf("ProductName = %q, want pod-app", got)
-		}
-	})
-
 	t.Run("checks label keys in priority order: name, app", func(t *testing.T) {
-		controllerLabels := map[string]string{
+		labels := map[string]string{
 			"app":                    "app-value",
 			"app.kubernetes.io/name": "name-value",
 		}
-		got, ok := ProductName(cfg, controllerLabels, nil)
+		got, ok := ProductName(cfg, labels)
 		if !ok {
 			t.Fatal("ProductName matched nothing, want name-value")
 		}
@@ -129,12 +105,12 @@ func TestProductName(t *testing.T) {
 		}
 	})
 
-	t.Run("returns no match when nothing matches in either map", func(t *testing.T) {
-		if _, ok := ProductName(cfg, nil, nil); ok {
+	t.Run("returns no match when nothing matches", func(t *testing.T) {
+		if _, ok := ProductName(cfg, nil); ok {
 			t.Error("ProductName matched, want no match (caller renders ProductNameFallback)")
 		}
 		unrelated := map[string]string{"unrelated": "x"}
-		if _, ok := ProductName(cfg, unrelated, unrelated); ok {
+		if _, ok := ProductName(cfg, unrelated); ok {
 			t.Error("ProductName matched, want no match (caller renders ProductNameFallback)")
 		}
 	})

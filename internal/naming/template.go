@@ -22,8 +22,6 @@ type Context struct {
 	ReportKind   string
 	ResourceKind string
 	ResourceName string
-	PodName      string
-	PodLabels    map[string]string
 }
 
 // Render evaluates tmplStr as a Go template against ctx. Strings without

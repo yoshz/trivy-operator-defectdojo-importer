@@ -28,18 +28,18 @@ type Config struct {
 
 	// Naming templates (Go text/template syntax, evaluated per-report).
 	// Available fields: .Namespace .ReportName .ReportKind .ResourceKind
-	// .ResourceName .PodName .PodLabels
+	// .ResourceName
 	EngagementNameTemplate string
 	ServiceNameTemplate    string
 	EnvNameTemplate        string
 	TestTitleTemplate      string
 	TagsTemplate           string
 
-	// ProductNameLabels are checked in order, first on the report's immediate
-	// controller (e.g. the ReplicaSet/DaemonSet/StatefulSet - or the Pod
-	// itself when the report references a Pod directly), then - only if none
-	// of them were found there - on the Pod itself. Not templated: these are
-	// label keys, matched verbatim against the resolved labels.
+	// ProductNameLabels are checked in order against the report's resolved
+	// resource labels (see internal/labelresolve - the report's immediate
+	// controller, e.g. a ReplicaSet, merged with its Pod's labels, with the
+	// controller's values taking precedence on key conflicts). Not
+	// templated: these are label keys, matched verbatim.
 	ProductNameLabels []string
 
 	// ProductNameFallback and ProductTypeDefault are naming templates (same
