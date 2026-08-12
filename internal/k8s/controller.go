@@ -214,12 +214,20 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 		}
 	}
 
+	displayResourceName := resourceName
+	if displayResourceName == "" {
+		// resourceName is only empty here for the trivy-operator.resource.name-hash
+		// case (kind is known, but the actual name couldn't be resolved) - fall
+		// back to the report's own name so naming templates don't render empty.
+		displayResourceName = name
+	}
+
 	nctx := naming.Context{
 		Namespace:    namespace,
 		ReportName:   name,
 		ReportKind:   kind,
 		ResourceKind: resourceKind,
-		ResourceName: resourceName,
+		ResourceName: displayResourceName,
 	}
 
 	productType, ok := mapping.ProductType(c.cfg, namespace)
