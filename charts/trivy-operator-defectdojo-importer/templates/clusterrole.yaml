@@ -17,7 +17,7 @@ rules:
     verbs: ["get", "list", "watch"]
   # Needed to resolve the Pod behind a report and read its labels.
   - apiGroups: [""]
-    resources: ["pods", "replicationcontrollers"]
+    resources: ["pods", "replicationcontrollers", "persistentvolumeclaims"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["replicasets", "daemonsets", "statefulsets", "deployments"]
