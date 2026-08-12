@@ -4,6 +4,30 @@ entries:
   - annotations:
       artifacthub.io/license: GPL-3.0-or-later
     apiVersion: v2
+    appVersion: 0.3.3
+    created: "2026-08-12T11:46:23.480731558Z"
+    description: Watches trivy-operator report CRDs and forwards them to DefectDojo,
+      assigning product type/name from namespace and pod labels.
+    digest: bb5fcf5a99f50dbf76ef22670ed86fe1632761487a09f473de58a56c0221fb9f
+    home: https://github.com/yoshz/trivy-operator-defectdojo-importer
+    keywords:
+    - trivy
+    - trivy-operator
+    - defectdojo
+    - security
+    - vulnerability-scanning
+    maintainers:
+    - name: yoshz
+    name: trivy-operator-defectdojo-importer
+    sources:
+    - https://github.com/yoshz/trivy-operator-defectdojo-importer
+    type: application
+    urls:
+    - https://github.com/yoshz/trivy-operator-defectdojo-importer/releases/download/trivy-operator-defectdojo-importer-0.3.3/trivy-operator-defectdojo-importer-0.3.3.tgz
+    version: 0.3.3
+  - annotations:
+      artifacthub.io/license: GPL-3.0-or-later
+    apiVersion: v2
     appVersion: 0.3.2
     created: "2026-08-12T11:12:58.242687986Z"
     description: Watches trivy-operator report CRDs and forwards them to DefectDojo,
@@ -169,4 +193,4 @@ entries:
     urls:
     - https://github.com/yoshz/trivy-operator-defectdojo-importer/releases/download/trivy-operator-defectdojo-importer-0.1.0-rc.1/trivy-operator-defectdojo-importer-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2026-08-12T11:12:58.242707553Z"
+generated: "2026-08-12T11:46:23.480752511Z"
