@@ -192,21 +192,10 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 	if resourceNamespace == "" {
 		resourceNamespace = namespace
 	}
-	if resourceKind == "" && resourceName == "" {
-		// trivy-operator didn't stamp any trivy-operator.resource.* labels
-		// at all - assume the report refers to a Pod with the same name as
-		// the report itself.
-		resourceKind = "Pod"
-		resourceName = name
-	}
 
 	var resourceLabels map[string]string
 	var err error
-	if resourceName != "" {
-		// resourceKind set but resourceName empty means trivy-operator
-		// couldn't fit the actual resource name into a label value (it
-		// stamped trivy-operator.resource.name-hash instead, which isn't
-		// reversible to a name we can look up by) - fall back silently.
+	if resourceKind != "" && resourceName != "" {
 		resourceLabels, err = c.resolver.Resolve(ctx, resourceNamespace, resourceKind, resourceName)
 		if err != nil {
 			slog.Warn("could not resolve related pod or controller, falling back to default product name",

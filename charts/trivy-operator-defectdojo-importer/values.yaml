@@ -116,8 +116,10 @@ defectDojo:
   # only if the controller carries none of them is the Pod itself checked too
   # (see productName above for the final fallback).
   productNameLabels:
+    - app.kubernetes.io/part-of
     - app.kubernetes.io/name
     - app
+    - k8s-app
 
   # Fallback product type (plain string or Go text/template, same syntax as
   # engagementName above), used when a namespace matches nothing in

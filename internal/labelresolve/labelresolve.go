@@ -42,13 +42,6 @@ const (
 	LabelResourceKind      = "trivy-operator.resource.kind"
 	LabelResourceName      = "trivy-operator.resource.name"
 	LabelResourceNamespace = "trivy-operator.resource.namespace"
-	// LabelResourceNameHash is set by trivy-operator instead of
-	// LabelResourceName when the resource's actual name fails Kubernetes
-	// label value validation (typically because it's longer than the
-	// 63-character label value limit, even though resource names may be up
-	// to 253 characters). It holds a hash of the name, not the name itself,
-	// so it can't be used to look the resource up directly.
-	LabelResourceNameHash = "trivy-operator.resource.name-hash"
 )
 
 // Resolver resolves the labels of the resource behind a trivy-operator
@@ -75,11 +68,7 @@ func New(clientset kubernetes.Interface, dynClient dynamic.Interface) *Resolver 
 // returned; a partial result (e.g. no Pod found) is returned with a nil
 // error, since that's expected for resource kinds that don't own a Pod.
 func (r *Resolver) Resolve(ctx context.Context, namespace, kind, name string) (map[string]string, error) {
-	if name == "" {
-		return nil, fmt.Errorf("empty resource name")
-	}
-
-	if strings.EqualFold(kind, "Pod") || kind == "" {
+	if strings.EqualFold(kind, "Pod") {
 		pod, err := r.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err

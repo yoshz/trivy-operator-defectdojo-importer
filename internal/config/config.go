@@ -142,7 +142,7 @@ func Load() (*Config, error) {
 		TestTitleTemplate:      getString("DEFECT_DOJO_TEST_TITLE", "Kubernetes"),
 		TagsTemplate:           getString("DEFECT_DOJO_TAGS", ""),
 
-		ProductNameLabels:   splitCSV(getString("DEFECT_DOJO_PRODUCT_NAME_LABELS", "app.kubernetes.io/name,app")),
+		ProductNameLabels:   splitCSV(getString("DEFECT_DOJO_PRODUCT_NAME_LABELS", "app.kubernetes.io/part-of,app.kubernetes.io/name,app,k8s-app")),
 		ProductNameFallback: getString("DEFECT_DOJO_PRODUCT_NAME", "{{.ResourceName}}"),
 		ProductTypeDefault:  getString("DEFECT_DOJO_PRODUCT_TYPE_NAME", "Research and Development"),
 

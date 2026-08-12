@@ -108,7 +108,7 @@ to the corresponding `_NAME` field.
 | `DEFECT_DOJO_TEST_TITLE` | `Kubernetes` | No | Test title (string or template) |
 | `DEFECT_DOJO_TAGS` | `""` (empty) | No | Comma-separated tags (string or template) |
 | `DEFECT_DOJO_PRODUCT_NAME` | `{{.ResourceName}}` | No | Fallback product name (string or template), used when none of `DEFECT_DOJO_PRODUCT_NAME_LABELS` can be resolved |
-| `DEFECT_DOJO_PRODUCT_NAME_LABELS` | `app.kubernetes.io/name,app` | No | Comma-separated label keys for the product name, checked in order, on the controller before the Pod (see "How pod resolution works" above) |
+| `DEFECT_DOJO_PRODUCT_NAME_LABELS` | `app.kubernetes.io/part-of,app.kubernetes.io/name,app,k8s-app` | No | Comma-separated label keys for the product name, checked in order, on the controller before the Pod (see "How pod resolution works" above) |
 | `DEFECT_DOJO_PRODUCT_TYPE_NAME` | `Research and Development` | No | Product type fallback (string or template), used when `DEFECT_DOJO_PRODUCT_TYPE_MAP` doesn't match |
 | `DEFECT_DOJO_PRODUCT_TYPE_MAP` | `""` (empty) | No | Namespace → product type map (see above) |
 | `REPORTS` | `vulnerabilityreports` | No | Comma-separated report CRDs to watch: `vulnerabilityreports`, `configauditreports`, `exposedsecretreports`, `infraassessmentreports`, `rbacassessmentreports` |
