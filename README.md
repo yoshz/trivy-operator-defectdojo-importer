@@ -72,7 +72,7 @@ the same semantics as the upstream Python operator: only the literal string
 `DEFECT_DOJO_ENV_NAME`, `DEFECT_DOJO_TEST_TITLE`, `DEFECT_DOJO_TAGS`,
 `DEFECT_DOJO_PRODUCT_NAME`, `DEFECT_DOJO_PRODUCT_TYPE_NAME`) accept plain
 strings or a [Go text/template](https://pkg.go.dev/text/template) referencing
-`.Namespace .ReportName .ReportKind .ResourceKind .ResourceName`. This
+`.Namespace .ReportName .ReportKind .ResourceKind .ResourceName .ProductName`. This
 replaces the upstream operator's `DEFECT_DOJO_EVAL_*` and
 Python `eval()` mechanism with something that isn't a code-injection vector.
 Note `DEFECT_DOJO_PRODUCT_NAME` and `DEFECT_DOJO_PRODUCT_TYPE_NAME` are only

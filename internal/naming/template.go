@@ -22,6 +22,7 @@ type Context struct {
 	ReportKind   string
 	ResourceKind string
 	ResourceName string
+	ProductName  string
 }
 
 // Render evaluates tmplStr as a Go template against ctx. Strings without

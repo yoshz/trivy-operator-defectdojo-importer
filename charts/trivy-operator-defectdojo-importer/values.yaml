@@ -83,7 +83,7 @@ defectDojo:
   doNotReactivate: false
 
   # Plain strings, or a Go text/template referencing
-  # .Namespace .ReportName .ReportKind .ResourceKind .ResourceName .PodName .PodLabels
+  # .Namespace .ReportName .ReportKind .ResourceKind .ResourceName .ProductName
   engagementName: "{{.Namespace}}"
   serviceName: ""
   # Fallback used only when a namespace matches nothing in envNameMap below.
@@ -105,16 +105,17 @@ defectDojo:
   envNameMap: []
 
   # Fallback product name (plain string or Go text/template, same syntax as
-  # engagementName above), used when none of productNameLabels below can be
-  # resolved on either the report's controller or its Pod. Defaults to the
-  # underlying Kubernetes resource's name.
+  # engagementName above, minus .ProductName - it isn't resolved yet at this
+  # point), used when none of productNameLabels below can be resolved.
+  # Defaults to the underlying Kubernetes resource's name.
   productName: "product"
 
-  # Product name is normally the value of the first of these labels found on
-  # the report's immediate controller (e.g. its ReplicaSet/DaemonSet/
-  # StatefulSet, or the Pod itself when the report references a Pod directly);
-  # only if the controller carries none of them is the Pod itself checked too
-  # (see productName above for the final fallback).
+  # Product name is the value of the first of these labels found on the
+  # report's resolved resource labels: the report's immediate controller
+  # (e.g. its ReplicaSet/DaemonSet/StatefulSet, or the Pod itself when the
+  # report references a Pod directly) merged with its Pod's labels, with the
+  # controller's values winning on key conflicts (see productName above for
+  # the final fallback).
   productNameLabels:
     - app.kubernetes.io/part-of
     - app.kubernetes.io/name

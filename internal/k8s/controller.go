@@ -233,6 +233,7 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 			return fmt.Errorf("rendering product name: %w", err)
 		}
 	}
+	nctx.ProductName = productName
 
 	engagementName, err := naming.Render(c.cfg.EngagementNameTemplate, nctx)
 	if err != nil {

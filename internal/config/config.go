@@ -28,7 +28,7 @@ type Config struct {
 
 	// Naming templates (Go text/template syntax, evaluated per-report).
 	// Available fields: .Namespace .ReportName .ReportKind .ResourceKind
-	// .ResourceName
+	// .ResourceName .ProductName
 	EngagementNameTemplate string
 	ServiceNameTemplate    string
 	EnvNameTemplate        string
