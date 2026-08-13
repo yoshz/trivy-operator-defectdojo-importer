@@ -137,7 +137,7 @@ func Load() (*Config, error) {
 		DoNotReactivate:              getBool("DEFECT_DOJO_DO_NOT_REACTIVATE", false),
 
 		EngagementNameTemplate: getString("DEFECT_DOJO_ENGAGEMENT_NAME", "{{.Namespace}}"),
-		ServiceNameTemplate:    getString("DEFECT_DOJO_SERVICE_NAME", ""),
+		ServiceNameTemplate:    getString("DEFECT_DOJO_SERVICE_NAME", "{{.Namespace}}/{{.ProductName}}"),
 		EnvNameTemplate:        getString("DEFECT_DOJO_ENV_NAME", "Development"),
 		TestTitleTemplate:      getString("DEFECT_DOJO_TEST_TITLE", "Kubernetes"),
 		TagsTemplate:           getString("DEFECT_DOJO_TAGS", ""),

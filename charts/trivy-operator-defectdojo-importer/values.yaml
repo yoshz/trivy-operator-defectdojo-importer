@@ -85,7 +85,7 @@ defectDojo:
   # Plain strings, or a Go text/template referencing
   # .Namespace .ReportName .ReportKind .ResourceKind .ResourceName .ProductName
   engagementName: "{{.Namespace}}"
-  serviceName: ""
+  serviceName: "{{.Namespace}}/{{.ProductName}}"
   # Fallback used only when a namespace matches nothing in envNameMap below.
   envName: "Development"
   testTitle: "Kubernetes"

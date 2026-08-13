@@ -102,7 +102,7 @@ to the corresponding `_NAME` field.
 | `DEFECT_DOJO_DEDUPLICATION_ON_ENGAGEMENT` | `false` | No | Scope deduplication to the engagement |
 | `DEFECT_DOJO_DO_NOT_REACTIVATE` | `false` | No | Don't reactivate closed findings that reappear |
 | `DEFECT_DOJO_ENGAGEMENT_NAME` | `{{.Namespace}}` | No | Engagement name (string or template) |
-| `DEFECT_DOJO_SERVICE_NAME` | `""` (empty) | No | Service name (string or template) |
+| `DEFECT_DOJO_SERVICE_NAME` | `{{.Namespace}}/{{.ProductName}}` | No | Service name (string or template) |
 | `DEFECT_DOJO_ENV_NAME` | `Development` | No | Environment name fallback (string or template), used when `DEFECT_DOJO_ENV_NAME_MAP` doesn't match |
 | `DEFECT_DOJO_ENV_NAME_MAP` | `""` (empty) | No | Namespace → environment name map (see above) |
 | `DEFECT_DOJO_TEST_TITLE` | `Kubernetes` | No | Test title (string or template) |
@@ -125,7 +125,44 @@ to the corresponding `_NAME` field.
 
 ¹ Not required when `DRY_RUN=true`.
 
-## Running locally against a real cluster (dry-run)
+## Testing
+
+CI (`.github/workflows/ci.yml`) runs all of the below on every push/PR; the
+same commands work locally.
+
+### Unit tests
+
+```bash
+go build ./...
+go vet ./...
+go test ./...
+gofmt -l .   # should print nothing; run `gofmt -w .` to fix
+```
+
+`internal/labelresolve`, `internal/mapping`, `internal/k8s` and
+`internal/nsmatch` have unit test coverage. Notably,
+`internal/labelresolve/labelresolve_test.go` covers resource kinds that
+never own a Pod (e.g. `Service`), kinds outside the core API group (e.g.
+`ReplicaSet`, which lives in `apps`), and the controller/Pod label merge
+precedence - these use fake `client-go`/`dynamic`/`discovery` clients, no
+real cluster needed. Run a single package verbosely with e.g.:
+
+```bash
+go test ./internal/labelresolve/... -v
+```
+
+### Helm chart
+
+```bash
+helm lint --strict charts/trivy-operator-defectdojo-importer \
+  --set defectDojo.url=https://defectdojo.example.com \
+  --set defectDojo.apiKey=dummy
+helm template charts/trivy-operator-defectdojo-importer \
+  --set defectDojo.url=https://defectdojo.example.com \
+  --set defectDojo.apiKey=dummy
+```
+
+### Manual testing against a real cluster (dry-run)
 
 The importer picks up `KUBECONFIG` the same way `kubectl` does (falling back
 to `~/.kube/config`), so pointing it at any cluster you can already reach is
@@ -137,8 +174,8 @@ export KUBECONFIG=/path/to/your/kubeconfig
 
 Set `DRY_RUN=true` to skip `DEFECT_DOJO_URL`/`DEFECT_DOJO_API_KEY` entirely
 and every DefectDojo API call - instead, for each report it watches, it logs
-the resolved pod, product type, product name, and rendered naming fields
-(engagement/service/environment/test title/tags) and moves on:
+the resolved resource labels, product type, product name, and rendered
+naming fields (engagement/service/environment/test title/tags) and moves on:
 
 ```bash
 KUBECONFIG=/path/to/your/kubeconfig DRY_RUN=true LOG_LEVEL=DEBUG \
@@ -155,7 +192,7 @@ namespace-derived product type/environment resolution rather than the
 Each existing matching report in the cluster produces one log line like:
 
 ```
-level=INFO msg="dry-run: resolved report mapping (nothing sent to DefectDojo)" kind=VulnerabilityReport report=nginx-6d4cf56db6-nginx namespace=production resourceKind=ReplicaSet resourceName=nginx-6d4cf56db6 podName=nginx-6d4cf56db6-abcde controllerLabels=map[app.kubernetes.io/name:nginx] podLabels=map[app.kubernetes.io/name:nginx pod-template-hash:6d4cf56db6] productType="Webapp" productName=nginx engagement=production service="" environment=Production testTitle=Kubernetes tags=[]
+level=INFO msg="dry-run: resolved report mapping (nothing sent to DefectDojo)" kind=VulnerabilityReport report=nginx-6d4cf56db6-nginx namespace=production productType="Webapp" productName=nginx engagement=production service="" environment=Production testTitle=Kubernetes tags=[] resourceKind=ReplicaSet resourceName=nginx-6d4cf56db6 resourceLabels=map[app.kubernetes.io/name:nginx pod-template-hash:6d4cf56db6]
 ```
 
 `REPORTS` limits which report CRDs are watched (useful to shrink the noise
@@ -163,6 +200,11 @@ during testing, e.g. `REPORTS=vulnerabilityreports`), `LABEL`/`LABEL_VALUE`
 further narrow it to reports carrying a specific label, and
 `INCLUDE_NAMESPACES`/`EXCLUDE_NAMESPACES` narrow it by namespace, e.g.
 `INCLUDE_NAMESPACES=production,testing-*` to only see reports from those.
+
+This is also the fastest way to check a `DEFECT_DOJO_*` naming template
+change actually renders the way you expect, since `resourceLabels` in the
+log line shows exactly what `.ProductName`/`ProductNameLabels` had to work
+with for that report.
 
 ## Known differences from telekom-mms/trivy-dojo-report-operator
 
