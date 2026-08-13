@@ -206,9 +206,8 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 	displayResourceName := resourceName
 	if displayResourceName == "" {
 		// resourceName is only empty here for the trivy-operator.resource.name-hash
-		// case (kind is known, but the actual name couldn't be resolved) - fall
-		// back to the report's own name so naming templates don't render empty.
-		displayResourceName = name
+		// case (kind is known, but the actual name couldn't be resolved)
+		displayResourceName = "unknown"
 	}
 
 	nctx := naming.Context{
@@ -319,6 +318,7 @@ func (c *Controller) handleReport(ctx context.Context, obj *unstructured.Unstruc
 
 	metrics.RequestsTotal.WithLabelValues("success").Inc()
 	slog.Info("imported report into defectdojo", "kind", kind, "name", name, "namespace", namespace,
-		"product", productName, "productType", productType, "engagement", engagementName)
+		"product", productName, "productType", productType, "engagement", engagementName,
+		"service", service, "environment", environment)
 	return nil
 }
