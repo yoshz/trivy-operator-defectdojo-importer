@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/yoshz/trivy-operator-defectdojo-importer/internal/naming"
 )
 
 // Config holds all runtime configuration for the operator.
@@ -25,6 +27,11 @@ type Config struct {
 	AutoCreateContext            bool
 	DeduplicationOnEngagement    bool
 	DoNotReactivate              bool
+
+	// DeleteRemovedNamespaces deletes the DefectDojo engagements (with their
+	// tests and findings) of namespaces that no longer exist. Requires
+	// EngagementNameTemplate to be derived from the namespace only.
+	DeleteRemovedNamespaces bool
 
 	// Naming templates (Go text/template syntax, evaluated per-report).
 	// Available fields: .Namespace .ReportName .ReportKind .ResourceKind
@@ -135,6 +142,7 @@ func Load() (*Config, error) {
 		AutoCreateContext:            getBool("DEFECT_DOJO_AUTO_CREATE_CONTEXT", false),
 		DeduplicationOnEngagement:    getBool("DEFECT_DOJO_DEDUPLICATION_ON_ENGAGEMENT", false),
 		DoNotReactivate:              getBool("DEFECT_DOJO_DO_NOT_REACTIVATE", false),
+		DeleteRemovedNamespaces:      getBool("DEFECT_DOJO_DELETE_REMOVED_NAMESPACES", false),
 
 		EngagementNameTemplate: getString("DEFECT_DOJO_ENGAGEMENT_NAME", "{{.Namespace}}"),
 		ServiceNameTemplate:    getString("DEFECT_DOJO_SERVICE_NAME", "{{.Namespace}}/{{.ProductName}}"),
@@ -176,7 +184,49 @@ func Load() (*Config, error) {
 		}
 	}
 
+	if cfg.DeleteRemovedNamespaces {
+		if err := validateNamespaceTemplate(cfg.EngagementNameTemplate); err != nil {
+			return nil, fmt.Errorf("DEFECT_DOJO_DELETE_REMOVED_NAMESPACES requires DEFECT_DOJO_ENGAGEMENT_NAME to be derived from the namespace only: %w", err)
+		}
+	}
+
 	return cfg, nil
+}
+
+// validateNamespaceTemplate checks that a naming template renders a distinct
+// value per namespace and doesn't depend on any other field, so the
+// engagement belonging to a namespace can be found from the namespace name
+// alone.
+func validateNamespaceTemplate(tmpl string) error {
+	render := func(namespace, other string) (string, error) {
+		return naming.Render(tmpl, naming.Context{
+			Namespace:    namespace,
+			ReportName:   other,
+			ReportKind:   other,
+			ResourceKind: other,
+			ResourceName: other,
+			ProductName:  other,
+		})
+	}
+	a, err := render("namespace-a", "value-1")
+	if err != nil {
+		return fmt.Errorf("rendering %q: %w", tmpl, err)
+	}
+	b, err := render("namespace-a", "value-2")
+	if err != nil {
+		return fmt.Errorf("rendering %q: %w", tmpl, err)
+	}
+	c, err := render("namespace-b", "value-1")
+	if err != nil {
+		return fmt.Errorf("rendering %q: %w", tmpl, err)
+	}
+	if a != b {
+		return fmt.Errorf("%q depends on fields other than .Namespace", tmpl)
+	}
+	if a == c {
+		return fmt.Errorf("%q does not depend on .Namespace", tmpl)
+	}
+	return nil
 }
 
 func getString(name, def string) string {

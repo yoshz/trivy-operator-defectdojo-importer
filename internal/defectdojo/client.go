@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Package defectdojo is a minimal client for the DefectDojo v2 API endpoints
-// used by the importer: checking whether a product exists, and reimporting
-// a scan.
+// used by the importer: checking whether a product exists, reimporting a
+// scan, and finding and deleting the engagements of deleted namespaces.
 package defectdojo
 
 import (

@@ -68,6 +68,8 @@ spec:
               value: {{ .Values.defectDojo.deduplicationOnEngagement | quote }}
             - name: DEFECT_DOJO_DO_NOT_REACTIVATE
               value: {{ .Values.defectDojo.doNotReactivate | quote }}
+            - name: DEFECT_DOJO_DELETE_REMOVED_NAMESPACES
+              value: {{ .Values.defectDojo.deleteRemovedNamespaces | quote }}
             - name: DEFECT_DOJO_ENGAGEMENT_NAME
               value: {{ .Values.defectDojo.engagementName | quote }}
             - name: DEFECT_DOJO_SERVICE_NAME
