@@ -18,6 +18,11 @@ var (
 		Help: "DefectDojo import requests processed, by outcome.",
 	}, []string{"status"})
 
+	EngagementsDeletedTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "engagements_deleted_total",
+		Help: "DefectDojo engagements of removed namespaces deleted, by outcome.",
+	}, []string{"status"})
+
 	ProcessingSeconds = promauto.NewSummary(prometheus.SummaryOpts{
 		Name: "request_processing_seconds",
 		Help: "Time spent processing a report and sending it to DefectDojo.",

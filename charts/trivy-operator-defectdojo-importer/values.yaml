@@ -81,6 +81,11 @@ defectDojo:
   autoCreateContext: true
   deduplicationOnEngagement: true
   doNotReactivate: false
+  # Delete the engagements (with their tests and findings) of namespaces that
+  # no longer exist. Requires engagementName below to be derived from the
+  # namespace only, e.g. "{{.Namespace}}". Only engagements containing
+  # nothing but "Trivy Operator Scan" tests are deleted.
+  deleteRemovedNamespaces: false
 
   # Plain strings, or a Go text/template referencing
   # .Namespace .ReportName .ReportKind .ResourceKind .ResourceName .ProductName

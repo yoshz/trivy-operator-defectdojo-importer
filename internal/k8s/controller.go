@@ -35,6 +35,7 @@ const resyncPeriod = 10 * time.Hour
 type Controller struct {
 	cfg       *config.Config
 	dynClient dynamic.Interface
+	clientset kubernetes.Interface
 	resolver  *labelresolve.Resolver
 	dd        *defectdojo.Client
 }
@@ -43,6 +44,7 @@ func NewController(cfg *config.Config, dynClient dynamic.Interface, clientset ku
 	return &Controller{
 		cfg:       cfg,
 		dynClient: dynClient,
+		clientset: clientset,
 		resolver:  labelresolve.New(clientset, dynClient),
 		dd:        dd,
 	}
@@ -78,6 +80,15 @@ func (c *Controller) Run(ctx context.Context) error {
 		}
 		slog.Info("watching report resource", "resource", w.gvr.Resource, "group", w.gvr.Group, "version", w.gvr.Version)
 		go w.run(ctx, c)
+	}
+
+	if c.cfg.DeleteRemovedNamespaces {
+		cleaner := c.newNamespaceCleaner()
+		go func() {
+			if err := cleaner.run(ctx); err != nil {
+				slog.Error("namespace cleanup stopped", "error", err)
+			}
+		}()
 	}
 
 	<-ctx.Done()

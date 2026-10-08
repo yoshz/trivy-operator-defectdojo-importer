@@ -101,6 +101,7 @@ to the corresponding `_NAME` field.
 | `DEFECT_DOJO_AUTO_CREATE_CONTEXT` | `false` | No | Auto-create the product/engagement/test if missing |
 | `DEFECT_DOJO_DEDUPLICATION_ON_ENGAGEMENT` | `false` | No | Scope deduplication to the engagement |
 | `DEFECT_DOJO_DO_NOT_REACTIVATE` | `false` | No | Don't reactivate closed findings that reappear |
+| `DEFECT_DOJO_DELETE_REMOVED_NAMESPACES` | `false` | No | Delete the engagements of namespaces that no longer exist (see "Removed namespaces" below) |
 | `DEFECT_DOJO_ENGAGEMENT_NAME` | `{{.Namespace}}` | No | Engagement name (string or template) |
 | `DEFECT_DOJO_SERVICE_NAME` | `{{.Namespace}}/{{.ProductName}}` | No | Service name (string or template) |
 | `DEFECT_DOJO_ENV_NAME` | `Development` | No | Environment name fallback (string or template), used when `DEFECT_DOJO_ENV_NAME_MAP` doesn't match |
@@ -205,6 +206,35 @@ This is also the fastest way to check a `DEFECT_DOJO_*` naming template
 change actually renders the way you expect, since `resourceLabels` in the
 log line shows exactly what `.ProductName`/`ProductNameLabels` had to work
 with for that report.
+
+## Removed namespaces
+
+When a namespace is deleted, trivy-operator deletes its reports, but nothing
+is reimported for them anymore, so `DEFECT_DOJO_CLOSE_OLD_FINDINGS` never
+closes their findings. With `DEFECT_DOJO_DELETE_REMOVED_NAMESPACES=true` the
+importer deletes the engagements (including their tests and findings) of
+namespaces that no longer exist:
+
+- when a namespace delete event is observed, the engagements named after
+  that namespace are deleted;
+- on startup and every hour, every engagement containing "Trivy Operator
+  Scan" tests whose name doesn't belong to an existing namespace is deleted,
+  which also catches namespaces removed while the importer wasn't running.
+
+Safeguards:
+
+- the importer refuses to start unless `DEFECT_DOJO_ENGAGEMENT_NAME` renders
+  a distinct name per namespace and uses no other fields (the default
+  `{{.Namespace}}` qualifies), since engagements are found by name;
+- only engagements whose tests are all "Trivy Operator Scan" tests are
+  deleted, engagements that also hold other scans are left alone and logged;
+- with `DRY_RUN=true` the engagements are only logged, not deleted.
+
+The hourly check assumes this importer is the only writer of "Trivy Operator
+Scan" tests in the DefectDojo instance: engagements created by an importer
+in another cluster would be deleted too, unless that cluster has a namespace
+with the same name. Deleted engagements are counted in the
+`engagements_deleted_total` metric.
 
 ## Known differences from telekom-mms/trivy-dojo-report-operator
 
